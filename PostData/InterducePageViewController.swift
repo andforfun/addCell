@@ -8,9 +8,10 @@
 
 import UIKit
 
-class InterducePageViewController: UIViewController {
+class InterducePageViewController: UIViewController,UIImagePickerControllerDelegate,UINavigationControllerDelegate {
 
 
+    @IBOutlet weak var pictureView: UIImageView!
     @IBOutlet weak var nameLabel: UILabel!
     @IBOutlet weak var starLabel: UILabel!
     var data1:[Dictionary<String, String>]!
@@ -20,7 +21,6 @@ class InterducePageViewController: UIViewController {
     var chooseNum:Int!
     var chooseNum2:Int!
     
-    @IBOutlet weak var Image: UIImageView!
     override func viewDidLoad() {
         super.viewDidLoad()
         let notificationData = Notification.Name("GetUpdateNoti")
@@ -31,17 +31,17 @@ class InterducePageViewController: UIViewController {
         #selector(InterducePageViewController.getUpdateNoti2(noti:)),name: notificationChoosenum,object: nil)
         nameLabel.text = data[chooseNum]["name"]
         starLabel.text = data[chooseNum]["star"]
-        let  imageView:UIImage
-        if chooseNum == 0 {
-            imageView = UIImage(named: "鋼鐵人")!
-        }
-        else if chooseNum == 1{
-             imageView = UIImage(named: "金剛狼")!
-        }
-        else{
-             imageView = UIImage(named: "雷神索爾")!
-        }
-        Image.image = imageView
+        //let image = loadPicture(name: data[chooseNum]["name"]!)
+        let fileManager = FileManager.default
+        let docUrls =
+            fileManager.urls(for: .documentDirectory,
+                             in: .userDomainMask)
+        let docUrl = docUrls.first
+        let getNmae = data[chooseNum]["name"]! + ".jpg"
+        let url = docUrl?.appendingPathComponent(getNmae)
+        let image = UIImage(contentsOfFile: (url?.path)!)
+        pictureView.image = image
+//Image.image = imageView
         // Do any additional setup after loading the view.
     }
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -63,6 +63,18 @@ class InterducePageViewController: UIViewController {
         chooseNum = noti.userInfo!["chooseNum"] as! Int!
         nameLabel.text = data[chooseNum]["name"]
         starLabel.text = data[chooseNum]["star"]
+        writeData()
+    }
+    func writeData(){
+        let fileManager = FileManager.default
+        let docUrls =
+            
+            fileManager.urls(for: .documentDirectory, in:
+                .userDomainMask)
+        let docUrl = docUrls.first
+        let url =  docUrl?.appendingPathComponent("電影英雄.txt")
+        (data as NSArray).write(to: url!, atomically:
+            true)
     }
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -82,8 +94,53 @@ class InterducePageViewController: UIViewController {
          self.performSegue(withIdentifier: "InterducePageViewController", sender: data )
         
     }
-    
+    func loadPicture(name:String)->UIImage{
+        let fileManager = FileManager.default
+        let docUrls =
+            fileManager.urls(for: .documentDirectory,
+                             in: .userDomainMask)
+        let docUrl = docUrls.first
+        let getNmae = name + ".jpg"
+        let url = docUrl?.appendingPathComponent(getNmae)
+        let image = UIImage(contentsOfFile: (url?.path)!)
+        return image!
+    }
 
+    @IBAction func takePicture(_ sender: AnyObject) {
+        let imagePicker = UIImagePickerController()
+        imagePicker.sourceType = .camera
+        imagePicker.delegate = self
+        self.present(imagePicker, animated: true, completion: nil)
+    }
+    func imagePickerController(_ picker: UIImagePickerController,
+                               didFinishPickingMediaWithInfo info: [String : Any]) {
+        
+        print("info \(info)")
+        let image = info[UIImagePickerControllerOriginalImage]
+        self.pictureView.image = image as? UIImage
+        if picker.sourceType == .camera{
+        UIImageWriteToSavedPhotosAlbum(self.pictureView.image!, nil, nil, nil)
+        }
+        let fileManager = FileManager.default
+        let docUrls =
+            fileManager.urls(for: .documentDirectory,
+                             in: .userDomainMask)
+        let docUrl = docUrls.first
+        //let interval = Date.timeIntervalSinceReferenceDate
+        let getData = self.data[chooseNum]["name"]
+        let name = "\(getData!).jpg"
+        let url =  docUrl?.appendingPathComponent(name)
+        let data = UIImageJPEGRepresentation(image as! UIImage, 0.9)
+        try! data?.write(to: url!)
+        self.dismiss(animated:true, completion: nil)
+    }
+   
+    @IBAction func usePicture(_ sender: AnyObject) {
+        let imagePicker = UIImagePickerController()
+        imagePicker.sourceType = .savedPhotosAlbum
+        imagePicker.delegate = self
+        self.present(imagePicker, animated: true, completion: nil)
+    }
     /*
     // MARK: - Navigation
 

@@ -18,7 +18,7 @@ class EditViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationItem.setHidesBackButton(true, animated: true)
-    
+         
         //name.text = "\(chooseNum!)"
         // Do any additional setup after loading the view.
     }
